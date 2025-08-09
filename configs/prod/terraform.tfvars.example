@@ -1,0 +1,160 @@
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Cluster Configuration
+cluster_name    = "eks-prod"
+cluster_version = "1.28"
+environment     = "prod"
+
+# Network Configuration
+vpc_cidr            = "10.2.0.0/16"
+availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+public_subnet_cidrs = ["10.2.1.0/24", "10.2.2.0/24", "10.2.3.0/24"]
+private_subnet_cidrs = ["10.2.10.0/24", "10.2.20.0/24", "10.2.30.0/24"]
+
+# High availability setup for production
+single_nat_gateway = false
+
+# Cluster Access Configuration - SECURE FOR PRODUCTION
+endpoint_private_access      = true
+endpoint_public_access       = false  # Private only for security
+endpoint_public_access_cidrs = []     # No public access
+
+# Node Groups Configuration - Production Grade
+node_groups = {
+  system = {
+    instance_types   = ["m5.xlarge"]
+    ami_type        = "AL2_x86_64"
+    capacity_type   = "ON_DEMAND"
+    disk_size       = 50
+    desired_size    = 3
+    max_size        = 6
+    min_size        = 3
+    max_unavailable = 1
+    labels = {
+      role = "system"
+      environment = "prod"
+      tier = "critical"
+    }
+    taints = [{
+      key    = "system"
+      value  = "true"
+      effect = "NO_SCHEDULE"
+    }]
+    tags = {
+      Environment = "prod"
+      NodeGroup   = "system"
+      Criticality = "high"
+    }
+  }
+  application = {
+    instance_types   = ["m5.large"]
+    ami_type        = "AL2_x86_64"
+    capacity_type   = "ON_DEMAND"
+    disk_size       = 50
+    desired_size    = 5
+    max_size        = 10
+    min_size        = 3
+    max_unavailable = 2
+    labels = {
+      role = "application"
+      environment = "prod"
+      tier = "application"
+    }
+    taints = []
+    tags = {
+      Environment = "prod"
+      NodeGroup   = "application"
+      Criticality = "high"
+    }
+  }
+  compute = {
+    instance_types   = ["c5.xlarge"]
+    ami_type        = "AL2_x86_64"
+    capacity_type   = "ON_DEMAND"
+    disk_size       = 100
+    desired_size    = 2
+    max_size        = 8
+    min_size        = 2
+    max_unavailable = 1
+    labels = {
+      role = "compute"
+      environment = "prod"
+      tier = "compute"
+    }
+    taints = [{
+      key    = "compute"
+      value  = "true"
+      effect = "NO_SCHEDULE"
+    }]
+    tags = {
+      Environment = "prod"
+      NodeGroup   = "compute"
+      Criticality = "medium"
+    }
+  }
+  spot = {
+    instance_types   = ["m5.large", "m5.xlarge", "c5.large", "c5.xlarge"]
+    ami_type        = "AL2_x86_64"
+    capacity_type   = "SPOT"
+    disk_size       = 50
+    desired_size    = 2
+    max_size        = 6
+    min_size        = 0
+    max_unavailable = 2
+    labels = {
+      role = "spot"
+      environment = "prod"
+      tier = "batch"
+    }
+    taints = [{
+      key    = "spot"
+      value  = "true"
+      effect = "NO_SCHEDULE"
+    }]
+    tags = {
+      Environment = "prod"
+      NodeGroup   = "spot"
+      Criticality = "low"
+    }
+  }
+}
+
+# Addons Configuration - Full Production Suite
+enable_cluster_autoscaler           = true
+enable_aws_load_balancer_controller = true
+enable_ebs_csi_driver               = true
+enable_efs_csi_driver               = true
+enable_metrics_server               = true
+enable_external_dns                 = true
+enable_cert_manager                 = true
+enable_ingress_nginx                = true
+
+# Monitoring Configuration - Comprehensive
+enable_container_insights = true
+enable_fluent_bit        = true
+enable_cloudwatch_alarms = true
+enable_prometheus        = true
+enable_grafana          = true
+log_retention_days      = 30
+
+# Notification Configuration - Critical Alerts
+alarm_notification_emails = [
+  "sre-team@yourcompany.com",
+  "devops@yourcompany.com",
+  "oncall@yourcompany.com"
+]
+
+# Tags - Production Compliance
+tags = {
+  Environment   = "prod"
+  Project      = "eks-infrastructure"
+  ManagedBy    = "terraform"
+  Owner        = "sre-team"
+  CostCenter   = "infrastructure"
+  Compliance   = "required"
+  Backup       = "required"
+  Monitoring   = "critical"
+  Security     = "high"
+  DataClass    = "confidential"
+}

@@ -1,0 +1,91 @@
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Cluster Configuration
+cluster_name    = "eks-dev"
+cluster_version = "1.28"
+environment     = "dev"
+
+# Network Configuration
+vpc_cidr            = "10.0.0.0/16"
+availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+private_subnet_cidrs = ["10.0.10.0/24", "10.0.20.0/24", "10.0.30.0/24"]
+
+# Cost optimization for dev environment
+single_nat_gateway = true
+
+# Cluster Access Configuration
+endpoint_private_access      = true
+endpoint_public_access       = true
+endpoint_public_access_cidrs = ["0.0.0.0/0"]  # Restrict this in production
+
+# Node Groups Configuration
+node_groups = {
+  general = {
+    instance_types   = ["t3.medium"]
+    ami_type        = "AL2_x86_64"
+    capacity_type   = "ON_DEMAND"
+    disk_size       = 20
+    desired_size    = 2
+    max_size        = 4
+    min_size        = 1
+    max_unavailable = 1
+    labels = {
+      role = "general"
+      environment = "dev"
+    }
+    taints = []
+    tags = {
+      Environment = "dev"
+      NodeGroup   = "general"
+    }
+  }
+  spot = {
+    instance_types   = ["t3.medium", "t3.large"]
+    ami_type        = "AL2_x86_64"
+    capacity_type   = "SPOT"
+    disk_size       = 20
+    desired_size    = 1
+    max_size        = 3
+    min_size        = 0
+    max_unavailable = 1
+    labels = {
+      role = "spot"
+      environment = "dev"
+    }
+    taints = [{
+      key    = "spot"
+      value  = "true"
+      effect = "NO_SCHEDULE"
+    }]
+    tags = {
+      Environment = "dev"
+      NodeGroup   = "spot"
+    }
+  }
+}
+
+# Addons Configuration
+enable_cluster_autoscaler           = true
+enable_aws_load_balancer_controller = true
+enable_ebs_csi_driver               = true
+enable_metrics_server               = true
+
+# Monitoring Configuration
+enable_container_insights = true
+enable_fluent_bit        = true
+enable_cloudwatch_alarms = false  # Disabled for dev to reduce costs
+log_retention_days       = 3      # Short retention for dev
+
+# Notification Configuration (optional)
+# alarm_notification_emails = ["admin@yourcompany.com"]
+
+# Tags
+tags = {
+  Environment = "dev"
+  Project     = "eks-infrastructure"
+  ManagedBy   = "terraform"
+  Owner       = "devops-team"
+  CostCenter  = "engineering"
+}
